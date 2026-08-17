@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2025 DiffPlug
+ * Copyright 2016-2026 DiffPlug
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,12 @@ final class IdeHook {
 	}
 
 	//No need to check ratchet (using isClean()) as it is performed in Gradle's IDE hook, since we have already gathered the available git files from ratchet.
-	static void performHook(Iterable<File> projectFiles, Formatter formatter, String path, boolean spotlessIdeHookUseStdIn, boolean spotlessIdeHookUseStdOut) {
+	static void performHook(Iterable<File> projectFiles,
+			Formatter formatter,
+			String path,
+			boolean spotlessIdeHookUseStdIn,
+			boolean spotlessIdeHookUseStdOut,
+			boolean spotlessIdeHookOutputCleanFiles) {
 		File file = new File(path);
 		if (!file.isAbsolute()) {
 			System.err.println("Argument passed to spotlessIdeHook must be an absolute path");
@@ -52,16 +57,16 @@ final class IdeHook {
 			DirtyState dirty = DirtyState.of(formatter, file, bytes);
 			if (dirty.isClean()) {
 				dumpIsClean();
+				if (spotlessIdeHookOutputCleanFiles) {
+					writeCanonical(dirty, file, spotlessIdeHookUseStdOut);
+				}
 			} else if (dirty.didNotConverge()) {
 				System.err.println("DID NOT CONVERGE");
-				System.err.println("See details https://github.com/diffplug/spotless/blob/main/PADDEDCELL.md");
+				System.err.println(
+						"See details https://github.com/diffplug/spotless/blob/main/PADDEDCELL.md");
 			} else {
 				System.err.println("IS DIRTY");
-				if (spotlessIdeHookUseStdOut) {
-					dirty.writeCanonicalTo(System.out);
-				} else {
-					dirty.writeCanonicalTo(file);
-				}
+				writeCanonical(dirty, file, spotlessIdeHookUseStdOut);
 			}
 		} catch (IOException e) {
 			e.printStackTrace(System.err);
@@ -69,6 +74,16 @@ final class IdeHook {
 		} finally {
 			System.err.close();
 			System.out.close();
+		}
+	}
+
+	private static void writeCanonical(DirtyState dirty,
+			File file,
+			boolean spotlessIdeHookUseStdOut) throws IOException {
+		if (spotlessIdeHookUseStdOut) {
+			dirty.writeCanonicalTo(System.out);
+		} else {
+			dirty.writeCanonicalTo(file);
 		}
 	}
 

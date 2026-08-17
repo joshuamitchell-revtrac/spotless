@@ -47,6 +47,9 @@ public class SpotlessApplyMojo extends AbstractSpotlessMojo {
 	@Parameter(property = "spotlessIdeHookUseStdOut")
 	private boolean spotlessIdeHookUseStdOut;
 
+	@Parameter(property = "spotlessIdeHookOutputCleanFiles", defaultValue = "false")
+	private boolean spotlessIdeHookOutputCleanFiles;
+
 	@Parameter(property = "spotless.apply.skip", defaultValue = "false")
 	private boolean applySkip;
 
@@ -58,7 +61,8 @@ public class SpotlessApplyMojo extends AbstractSpotlessMojo {
 	@Override
 	protected void process(String name, Iterable<File> files, Formatter formatter, UpToDateChecker upToDateChecker) throws MojoExecutionException {
 		if (isIdeHook()) {
-			IdeHook.performHook(files, formatter, spotlessIdeHook, spotlessIdeHookUseStdIn, spotlessIdeHookUseStdOut);
+			IdeHook.performHook(files, formatter, spotlessIdeHook, spotlessIdeHookUseStdIn, spotlessIdeHookUseStdOut,
+					spotlessIdeHookOutputCleanFiles);
 			return;
 		}
 
